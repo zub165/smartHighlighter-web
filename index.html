@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Highlighter Reader - Book Reading Assistant</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#6366f1"/>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <span class="header-icon">📚</span>
+        <span class="header-title">Smart Highlighter Reader</span>
+      </div>
+      <div class="header-controls">
+        <button id="toggleMode" class="btn btn-secondary">📖 Reading Mode</button>
+        <button id="toggleTheme" class="btn btn-ghost">🌙</button>
+      </div>
+    </header>
+    
+    <main class="book-view">
+      <!-- Camera Tab Content -->
+      <div id="cameraTab" class="tab-content active">
+        <div class="card camera-section">
+          <div class="card-header">
+            <h3 class="card-title">📷 Smart Camera Reader</h3>
+            <div class="camera-status" id="cameraStatus"></div>
+            <div class="card-controls">
+              <button id="readingModeToggle" class="btn btn-accent">📖 Reading Mode: OFF</button>
+              <button id="toggleCamera" class="btn btn-secondary">🔄 Toggle Camera</button>
+              <button id="resetPermissions" class="btn btn-ghost">🔓 Reset Permissions</button>
+            </div>
+          </div>
+          
+          <!-- Enhanced Camera Interface -->
+          <div class="camera-interface">
+            <!-- Camera Viewport with Overlays -->
+            <div class="camera-viewport">
+              <video id="video" autoplay playsinline muted></video>
+              <canvas id="canvas"></canvas>
+              
+              <!-- Camera Overlays -->
+              <div class="camera-overlays">
+                <!-- Focus Guide -->
+                <div class="focus-guide" id="focusGuide">
+                  <div class="corner top-left"></div>
+                  <div class="corner top-right"></div>
+                  <div class="corner bottom-left"></div>
+                  <div class="corner bottom-right"></div>
+                  <div class="center-line horizontal"></div>
+                  <div class="center-line vertical"></div>
+                </div>
+                
+                <!-- Reading Mode Overlay -->
+                <div class="reading-mode-overlay" id="readingModeOverlay" style="display: none;">
+                  <div class="reading-line"></div>
+                  <div class="reading-overlay-progress"></div>
+                </div>
+                
+                <!-- Camera Controls Overlay -->
+                <div class="camera-controls-overlay">
+                  <div class="camera-controls-left">
+                    <button id="flashToggle" class="camera-control-btn" title="Toggle Flash">
+                      <span class="control-icon">⚡</span>
+                    </button>
+                    <button id="zoomToggle" class="camera-control-btn" title="Toggle Zoom">
+                      <span class="control-icon">🔍</span>
+                    </button>
+                  </div>
+                  
+                  <div class="camera-controls-center">
+                    <button id="snapBtn" class="capture-btn">
+                      <div class="capture-btn-inner">
+                        <span class="capture-icon">📸</span>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  <div class="camera-controls-right">
+                    <button id="autoFocusToggle" class="camera-control-btn" title="Auto Focus">
+                      <span class="control-icon">🎯</span>
+                    </button>
+                    <button id="gridToggle" class="camera-control-btn" title="Toggle Grid">
+                      <span class="control-icon">⊞</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Camera Info Overlay -->
+                <div class="camera-info-overlay">
+                  <div class="camera-info-item">
+                    <span class="info-icon">📊</span>
+                    <span class="info-text" id="cameraResolution">--</span>
+                  </div>
+                  <div class="camera-info-item">
+                    <span class="info-icon">🎯</span>
+                    <span class="info-text" id="focusStatus">Auto</span>
+                  </div>
+                  <div class="camera-info-item">
+                    <span class="info-icon">⚡</span>
+                    <span class="info-text" id="flashStatus">Off</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Camera Settings Panel -->
+            <div class="camera-settings-panel">
+              <div class="settings-section">
+                <h4>📷 Camera Settings</h4>
+                <div class="setting-group">
+                  <label for="cameraQuality">Quality:</label>
+                  <select id="cameraQuality" class="setting-select">
+                    <option value="high">High (4K)</option>
+                    <option value="medium" selected>Medium (1080p)</option>
+                    <option value="low">Low (720p)</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label for="cameraFacing">Camera:</label>
+                  <select id="cameraFacing" class="setting-select">
+                    <option value="environment" selected>Back Camera</option>
+                    <option value="user">Front Camera</option>
+                  </select>
+                </div>
+                <div class="setting-group">
+                  <label for="ocrLanguage">OCR Language:</label>
+                  <select id="ocrLanguage" class="setting-select">
+                    <option value="eng" selected>English</option>
+                    <option value="ara">Arabic</option>
+                    <option value="spa">Spanish</option>
+                    <option value="fra">French</option>
+                    <option value="deu">German</option>
+                    <option value="chi_sim">Chinese (Simplified)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="settings-section">
+                <h4>🔧 Reading Mode</h4>
+                <div class="setting-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="autoOCR" checked>
+                    <span class="checkmark"></span>
+                    Auto OCR on capture
+                  </label>
+                </div>
+                <div class="setting-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="enhancedOCR" checked>
+                    <span class="checkmark"></span>
+                    Enhanced OCR processing
+                  </label>
+                </div>
+                <div class="setting-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="readingGuide">
+                    <span class="checkmark"></span>
+                    Show reading guide
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Camera Permission Warning -->
+          <div id="cameraPermissionWarning" class="camera-permission-warning" style="display: none;">
+            <h4>⚠️ Camera Access Required</h4>
+            <p>To read books with OCR, please allow camera access when prompted.</p>
+            <p><strong>Tip:</strong> Make sure you're using HTTPS or localhost for camera access.</p>
+            <button id="requestCameraAccess" class="btn btn-primary">📱 Request Camera Access</button>
+          </div>
+          
+          <!-- Troubleshooting Section -->
+          <div id="troubleshootingSection" class="troubleshooting-section" style="display: none;">
+            <h4>🔧 Camera Troubleshooting</h4>
+            <div class="troubleshooting-steps">
+              <div class="step">
+                <strong>1. Check Browser Permissions:</strong>
+                <p>Click the camera icon in your browser's address bar and ensure camera access is allowed.</p>
+              </div>
+              <div class="step">
+                <strong>2. Use HTTPS or Localhost:</strong>
+                <p>Camera access requires a secure connection. Use HTTPS or localhost (like now).</p>
+              </div>
+              <div class="step">
+                <strong>3. Close Other Camera Apps:</strong>
+                <p>Make sure no other applications are using your camera.</p>
+              </div>
+              <div class="step">
+                <strong>4. Check Camera Hardware:</strong>
+                <p>Ensure your camera is properly connected and not being used by other software.</p>
+              </div>
+              <div class="step">
+                <strong>5. Try Different Browser:</strong>
+                <p>Some browsers have better camera support than others.</p>
+              </div>
+              <div class="step mobile-specific" style="display: none;">
+                <strong>📱 Mobile-Specific Tips:</strong>
+                <p><strong>iPhone:</strong> Use Safari, allow camera permissions in Settings > Safari > Camera</p>
+                <p><strong>Android:</strong> Use Chrome, allow camera permissions when prompted</p>
+                <p><strong>Both:</strong> Make sure no other apps are using the camera</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Tab Content -->
+      <div id="textTab" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📖 Extracted Text</h3>
+            <div class="card-controls">
+              <button id="speakBtn" class="btn btn-primary">🔊 Read Aloud</button>
+              <button id="copyBtn" class="btn btn-secondary">📋 Copy</button>
+              <button id="clearBtn" class="btn btn-secondary">🗑️ Clear</button>
+            </div>
+          </div>
+          <div id="ocrText" contenteditable="true" class="text-display" aria-label="OCR Text"></div>
+        </div>
+      </div>
+
+      <!-- AI Tab Content -->
+      <div id="aiTab" class="tab-content">
+        <div class="ai-section">
+          <h3>🤖 AI Suggested Highlights</h3>
+          <div class="ai-controls">
+            <button id="summarizeBtn" onclick="generateHighlights()" class="btn-accent">
+              🤖 Generate Enhanced
+            </button>
+            <button id="bookmarkBtn" onclick="addBookmark()" class="btn-secondary">
+              💾 Bookmark
+            </button>
+          </div>
+          <div id="aiHighlights" class="ai-highlights">
+            Click "Generate Enhanced" to create AI-powered highlights with study context
+          </div>
+          
+          <!-- Study Notes Integration -->
+          <div id="studyNotesContainer" class="study-notes-container">
+            <!-- Related study notes will be displayed here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tools Tab Content -->
+      <div id="toolsTab" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🛠️ Reading Tools</h3>
+          </div>
+          <div class="tools-grid">
+            <button id="processAllBtn" class="tool-btn">
+              <span class="tool-icon">📑</span>
+              <span class="tool-label">Process Multiple Pages</span>
+            </button>
+            <button id="exportBtn" class="tool-btn">
+              <span class="tool-icon">📄</span>
+              <span class="tool-label">Export to PDF</span>
+            </button>
+            <button id="exportNotesBtn" class="tool-btn">
+              <span class="tool-icon">📝</span>
+              <span class="tool-label">Export Notes</span>
+            </button>
+            <button id="createQuizBtn" class="tool-btn">
+              <span class="tool-icon">❓</span>
+              <span class="tool-label">Create Quiz</span>
+            </button>
+            <button id="flashcardsBtn" class="tool-btn">
+              <span class="tool-icon">🃏</span>
+              <span class="tool-label">Flashcards</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- File Upload -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📁 Add Images</h3>
+          </div>
+          <label for="multiInput" class="file-upload-area">
+            <span class="upload-icon">📁</span>
+            <span class="upload-text">Tap to select images or drag & drop</span>
+            <input type="file" accept="image/*" id="multiInput" multiple style="display:none;" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Bookmarks Tab Content -->
+      <div id="bookmarksTab" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🔖 Saved Bookmarks</h3>
+          </div>
+          <div id="bookmarksList" class="bookmarks-list"></div>
+        </div>
+      </div>
+
+      <!-- Desktop Sidebar (hidden on mobile) -->
+      <nav class="sidebar">
+        <div class="sidebar-section">
+          <h4>📚 Reading Tools</h4>
+          <button id="processAllBtnSidebar" class="sidebar-btn">
+            <span class="sidebar-icon">📑</span>
+            <span class="sidebar-label">Process Multiple Pages</span>
+          </button>
+          <button id="exportBtnSidebar" class="sidebar-btn">
+            <span class="sidebar-icon">📄</span>
+            <span class="sidebar-label">Export to PDF</span>
+          </button>
+          <button id="exportNotesBtnSidebar" class="sidebar-btn">
+            <span class="sidebar-icon">📝</span>
+            <span class="sidebar-label">Export Notes</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <h4>🎯 Study Tools</h4>
+          <button id="createQuizBtnSidebar" class="sidebar-btn">
+            <span class="sidebar-icon">❓</span>
+            <span class="sidebar-label">Create Quiz</span>
+          </button>
+          <button id="flashcardsBtnSidebar" class="sidebar-btn">
+            <span class="sidebar-icon">🃏</span>
+            <span class="sidebar-label">Flashcards</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <h4>📁 Files</h4>
+          <label for="multiInput" class="sidebar-upload-label">
+            <span class="sidebar-icon">📁</span>
+            <span class="sidebar-label">Add Images</span>
+          </label>
+        </div>
+      </nav>
+    </main>
+
+    <!-- Reading Progress -->
+    <div class="reading-progress">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <span id="progressText" class="progress-text">Pages processed: 0</span>
+    </div>
+  </div>
+  
+  <!-- Bottom Tab Navigation -->
+  <nav class="bottom-tabs">
+    <div class="tab-item active" data-tab="camera">
+      <div class="tab-icon">📷</div>
+      <div class="tab-label">Camera</div>
+    </div>
+    <div class="tab-item" data-tab="text">
+      <div class="tab-icon">📖</div>
+      <div class="tab-label">Text</div>
+    </div>
+    <div class="tab-item" data-tab="ai">
+      <div class="tab-icon">⭐</div>
+      <div class="tab-label">AI</div>
+    </div>
+    <div class="tab-item" data-tab="tools">
+      <div class="tab-icon">🛠️</div>
+      <div class="tab-label">Tools</div>
+    </div>
+    <div class="tab-item" data-tab="bookmarks">
+      <div class="tab-icon">🔖</div>
+      <div class="tab-label">Saved</div>
+    </div>
+  </nav>
+
+  <!-- Modals -->
+  <div id="quizModal" class="modal">
+    <div class="modal-content">
+      <h3>📝 Quiz Generated</h3>
+      <div id="quizContent"></div>
+      <button id="closeQuiz" class="modal-btn">Close</button>
+    </div>
+  </div>
+
+  <div id="flashcardsModal" class="modal">
+    <div class="modal-content">
+      <h3>🃏 Flashcards</h3>
+      <div id="flashcardsContent"></div>
+      <button id="closeFlashcards" class="modal-btn">Close</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
